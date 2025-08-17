@@ -14,7 +14,8 @@ FROM python:3.12-alpine
 ARG TARGETARCH
 ARG TARGETVARIANT
 
-ENV OJ_ENV production
+# <--- PERUBAHAN 1: Memperbaiki format ENV
+ENV OJ_ENV="production"
 WORKDIR /app
 
 COPY ./deploy/requirements.txt /app/deploy/
@@ -33,6 +34,9 @@ COPY ./ /app/
 COPY --from=downloader --link /app/dist/ /app/dist/
 RUN chmod -R u=rwX,go=rX ./ && chmod +x ./deploy/entrypoint.sh
 
-HEALTHCHECK --interval=5s CMD [ "/usr/local/bin/python3", "/app/deploy/health_check.py" ]
+# <--- PERUBAHAN 2: Membuat Health Check lebih andal
+HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
+  CMD [ "/usr/local/bin/python3", "/app/deploy/health_check.py" ]
+
 EXPOSE 8000
 ENTRYPOINT [ "/app/deploy/entrypoint.sh" ]
